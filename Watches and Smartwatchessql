@@ -1,0 +1,369 @@
+-- 1. Category Table
+CREATE TABLE CATEGORY (
+    category_id INT PRIMARY KEY,
+    category_name VARCHAR2(50) NOT NULL
+);
+
+-- 2. Subcategory Table
+CREATE TABLE SUBCATEGORY (
+    sub_id INT PRIMARY KEY,
+    subcategory_name VARCHAR2(50) NOT NULL,
+    category_id INT REFERENCES CATEGORY(category_id)
+);
+
+-- 3. Vendor Table 
+CREATE TABLE VENDOR (
+    vendor_id INT PRIMARY KEY,
+    vendor_name VARCHAR2(100) NOT NULL,
+    vendor_email VARCHAR2(100),
+    vendor_phone VARCHAR2(20),
+    vendor_address VARCHAR2(200)
+);
+
+-- 4. Product Table
+CREATE TABLE PRODUCT (
+    product_id INT PRIMARY KEY,
+    product_name VARCHAR2(100) NOT NULL,
+    product_price DECIMAL(10, 2) NOT NULL CHECK (product_price > 0),
+    product_stock INT DEFAULT 0,
+    product_description VARCHAR2(500),
+    sub_id INT REFERENCES SUBCATEGORY(sub_id),
+    vendor_id INT REFERENCES VENDOR(vendor_id)
+);
+
+-- 5. Product Attribute Table
+CREATE TABLE PRODUCT_ATTRIBUTE (
+    product_attr_id INT PRIMARY KEY,
+    product_id INT REFERENCES PRODUCT(product_id),
+    attr_name VARCHAR2(50),
+    attr_value VARCHAR2(100)
+);
+
+-- 6. Customer Table
+CREATE TABLE CUSTOMER (
+    customer_id INT PRIMARY KEY,
+    customer_fname VARCHAR2(50) NOT NULL,
+    customer_lname VARCHAR2(50) NOT NULL,
+    customer_email VARCHAR2(100) UNIQUE NOT NULL,
+    customer_phone VARCHAR2(20),
+    customer_password VARCHAR2(50) NOT NULL,
+    customer_status VARCHAR2(20) DEFAULT 'Active'
+);
+
+-- 7. Customer Address Table
+CREATE TABLE CUSTOMER_ADDRESS (
+    addr_id INT PRIMARY KEY,
+    customer_id INT REFERENCES CUSTOMER(customer_id),
+    address_line VARCHAR2(200) NOT NULL,
+    city VARCHAR2(50),
+    province VARCHAR2(50),
+    postal_code VARCHAR2(20),
+    address_type VARCHAR2(20) -- (Home, Office...)
+);
+
+-- 8. Cart Table (Parent for Cart_Item)
+CREATE TABLE CART (
+    cart_id INT PRIMARY KEY,
+    customer_id INT REFERENCES CUSTOMER(customer_id),
+    cart_status VARCHAR2(20),
+    created_date DATE DEFAULT SYSDATE
+);
+
+-- 9. Cart Item Table
+CREATE TABLE CART_ITEM (
+    cart_item_id INT PRIMARY KEY,
+    cart_id INT REFERENCES CART(cart_id),
+    product_id INT REFERENCES PRODUCT(product_id),
+    quantity INT NOT NULL CHECK (quantity > 0),
+    item_price DECIMAL(10, 2)
+);
+
+-- 10. Wishlist Table (Parent for Wishlist_Item)
+CREATE TABLE WISHLIST (
+    wishlist_id INT PRIMARY KEY,
+    customer_id INT REFERENCES CUSTOMER(customer_id),
+    wishlist_name VARCHAR2(50)
+);
+
+-- 11. Wishlist Item Table
+CREATE TABLE WISHLIST_ITEM (
+    item_id INT PRIMARY KEY,
+    wishlist_id INT REFERENCES WISHLIST(wishlist_id),
+    product_id INT REFERENCES PRODUCT(product_id),
+    added_date DATE DEFAULT SYSDATE
+);
+
+-- 12. Orders Table
+CREATE TABLE ORDERS (
+    order_id INT PRIMARY KEY,
+    customer_id INT REFERENCES CUSTOMER(customer_id),
+    order_date DATE DEFAULT SYSDATE,
+    total_amount DECIMAL(10, 2),
+    order_status VARCHAR2(20)
+);
+
+-- 13. Order Item Table
+CREATE TABLE ORDER_ITEM (
+    order_item_id INT PRIMARY KEY,
+    order_id INT REFERENCES ORDERS(order_id),
+    product_id INT REFERENCES PRODUCT(product_id),
+    quantity INT NOT NULL,
+    item_price DECIMAL(10, 2)
+);
+
+-- 14. Shipping Table
+CREATE TABLE SHIPPING (
+    shipping_id INT PRIMARY KEY,
+    order_id INT REFERENCES ORDERS(order_id),
+    addr_id INT REFERENCES CUSTOMER_ADDRESS(addr_id),
+    shipping_status VARCHAR2(50),
+    shipping_date DATE,
+    tracking_number VARCHAR2(50)
+);
+
+-- 15. Order Action Table (Returns/Cancellations)
+CREATE TABLE ORDER_ACTION (
+    action_id INT PRIMARY KEY,
+    order_id INT REFERENCES ORDERS(order_id),
+    action_type VARCHAR2(50), -- (Return, Refund, Cancellation)
+    action_date DATE DEFAULT SYSDATE
+);
+
+-- 1. CATEGORY 
+INSERT INTO CATEGORY VALUES (1, 'Smartwatches');
+INSERT INTO CATEGORY VALUES (2, 'Luxury Watches');
+INSERT INTO CATEGORY VALUES (3, 'Sports Watches');
+INSERT INTO CATEGORY VALUES (4, 'Classic Watches');
+INSERT INTO CATEGORY VALUES (5, 'Hybrid Watches');
+INSERT INTO CATEGORY VALUES (6, 'Kids Watches');
+INSERT INTO CATEGORY VALUES (7, 'Diving Watches');
+INSERT INTO CATEGORY VALUES (8, 'Aviation Watches');
+INSERT INTO CATEGORY VALUES (9, 'Fashion Watches');
+INSERT INTO CATEGORY VALUES (10, 'Limited Edition');
+
+-- 2. SUBCATEGORY 
+INSERT INTO SUBCATEGORY VALUES (101, 'Fitness Trackers', 1);
+INSERT INTO SUBCATEGORY VALUES (102, 'Mechanical', 2);
+INSERT INTO SUBCATEGORY VALUES (103, 'GPS Watches', 3);
+INSERT INTO SUBCATEGORY VALUES (104, 'Quartz', 4);
+INSERT INTO SUBCATEGORY VALUES (105, 'Solar Powered', 5);
+INSERT INTO SUBCATEGORY VALUES (106, 'Education Smartwatches', 6);
+INSERT INTO SUBCATEGORY VALUES (107, 'Deep Sea', 7);
+INSERT INTO SUBCATEGORY VALUES (108, 'Pilot Chronograph', 8);
+INSERT INTO SUBCATEGORY VALUES (109, 'Designer Leather', 9);
+INSERT INTO SUBCATEGORY VALUES (110, 'Anniversary Collection', 10);
+
+-- 3. VENDOR
+INSERT INTO VENDOR VALUES (501, 'Apple Inc.', 'sales@apple.com', '1-800-MY-APPLE', 'Cupertino, CA');
+INSERT INTO VENDOR VALUES (502, 'Rolex SA', 'contact@rolex.com', '+41 22 302', 'Geneva, Switzerland');
+INSERT INTO VENDOR VALUES (503, 'Garmin Ltd.', 'support@garmin.com', '1-800-800-1020', 'Olathe, KS');
+INSERT INTO VENDOR VALUES (504, 'Seiko Watch', 'info@seiko.jp', '+81 3 3563', 'Tokyo, Japan');
+INSERT INTO VENDOR VALUES (505, 'Fossil Group', 'help@fossil.com', '1-800-449-3056', 'Richardson, TX');
+INSERT INTO VENDOR VALUES (506, 'Samsung Electronics', 'biz@samsung.com', '1-800-SAMSUNG', 'Suwon, South Korea');
+INSERT INTO VENDOR VALUES (507, 'TAG Heuer', 'service@tagheuer.com', '+41 32 919', 'La Chaux-de-Fonds, CH');
+INSERT INTO VENDOR VALUES (508, 'Casio Computer', 'support@casio.com', '1-800-706-2534', 'Shibuya, Japan');
+INSERT INTO VENDOR VALUES (509, 'Omega SA', 'contact@omega.ch', '+41 32 343', 'Bienne, Switzerland');
+INSERT INTO VENDOR VALUES (510, 'Fitbit', 'help@fitbit.com', '1-877-623-4463', 'San Francisco, CA');
+
+-- 4. PRODUCT 
+INSERT INTO PRODUCT VALUES (1001, 'Apple Watch S9', 399.00, 50, 'Aluminum case', 101, 501);
+INSERT INTO PRODUCT VALUES (1002, 'Submariner', 10500.00, 5, 'Gold/Steel', 107, 502);
+INSERT INTO PRODUCT VALUES (1003, 'Fenix 7X', 899.00, 20, 'Solar multisport', 103, 503);
+INSERT INTO PRODUCT VALUES (1004, 'Seiko 5 Sports', 295.00, 100, 'Automatic movement', 102, 504);
+INSERT INTO PRODUCT VALUES (1005, 'Gen 6 Hybrid', 229.00, 30, 'Always-on display', 105, 505);
+INSERT INTO PRODUCT VALUES (1006, 'Galaxy Watch 6', 299.00, 45, 'Android WearOS', 101, 506);
+INSERT INTO PRODUCT VALUES (1007, 'Carrera', 6500.00, 8, 'Chronograph style', 108, 507);
+INSERT INTO PRODUCT VALUES (1008, 'G-Shock Mudmaster', 350.00, 60, 'Rugged durability', 103, 508);
+INSERT INTO PRODUCT VALUES (1009, 'Speedmaster', 7000.00, 12, 'Moonwatch edition', 102, 509);
+INSERT INTO PRODUCT VALUES (1010, 'Fitbit Charge 6', 159.00, 150, 'Health tracker', 101, 510);
+
+-- 5. PRODUCT_ATTRIBUTE 
+INSERT INTO PRODUCT_ATTRIBUTE VALUES (2001, 1001, 'Battery Life', '18 hours');
+INSERT INTO PRODUCT_ATTRIBUTE VALUES (2002, 1002, 'Water Resistance', '300m');
+INSERT INTO PRODUCT_ATTRIBUTE VALUES (2003, 1003, 'Screen Type', 'MIP Display');
+INSERT INTO PRODUCT_ATTRIBUTE VALUES (2004, 1004, 'Power Reserve', '41 hours');
+INSERT INTO PRODUCT_ATTRIBUTE VALUES (2005, 1005, 'Charging', 'Magnetic');
+INSERT INTO PRODUCT_ATTRIBUTE VALUES (2006, 1006, 'OS', 'Wear OS 4');
+INSERT INTO PRODUCT_ATTRIBUTE VALUES (2007, 1007, 'Case Material', 'Polished Steel');
+INSERT INTO PRODUCT_ATTRIBUTE VALUES (2008, 1008, 'Sensor', 'Triple Sensor');
+INSERT INTO PRODUCT_ATTRIBUTE VALUES (2009, 1009, 'Movement', 'Manual Wind');
+INSERT INTO PRODUCT_ATTRIBUTE VALUES (2010, 1010, 'Compatibility', 'iOS & Android');
+
+-- 6. CUSTOMER 
+INSERT INTO CUSTOMER VALUES (3001, 'John', 'Doe', 'j.doe@email.com', '555-0101', 'pass123', 'Active');
+INSERT INTO CUSTOMER VALUES (3002, 'Jane', 'Smith', 'j.smith@email.com', '555-0102', 'secure456', 'Active');
+INSERT INTO CUSTOMER VALUES (3003, 'Alice', 'Brown', 'a.brown@email.com', '555-0103', 'alice789', 'Active');
+INSERT INTO CUSTOMER VALUES (3004, 'Bob', 'White', 'b.white@email.com', '555-0104', 'bobpass', 'Inactive');
+INSERT INTO CUSTOMER VALUES (3005, 'Charlie', 'Green', 'c.green@email.com', '555-0105', 'charlie0', 'Active');
+INSERT INTO CUSTOMER VALUES (3006, 'David', 'Wilson', 'd.wilson@email.com', '555-0106', 'davidw', 'Active');
+INSERT INTO CUSTOMER VALUES (3007, 'Eve', 'Davis', 'e.davis@email.com', '555-0107', 'evepass', 'Active');
+INSERT INTO CUSTOMER VALUES (3008, 'Frank', 'Miller', 'f.miller@email.com', '555-0108', 'frankm', 'Active');
+INSERT INTO CUSTOMER VALUES (3009, 'Grace', 'Lee', 'g.lee@email.com', '555-0109', 'graceL', 'Active');
+INSERT INTO CUSTOMER VALUES (3010, 'Henry', 'Clark', 'h.clark@email.com', '555-0110', 'henryC', 'Active');
+
+-- 7. CUSTOMER_ADDRESS 
+INSERT INTO CUSTOMER_ADDRESS VALUES (4001, 3001, '123 Pine St', 'Toronto', 'ON', 'M5V 2L1', 'Home');
+INSERT INTO CUSTOMER_ADDRESS VALUES (4002, 3002, '456 Oak Ave', 'Vancouver', 'BC', 'V6B 1A1', 'Work');
+INSERT INTO CUSTOMER_ADDRESS VALUES (4003, 3003, '789 Maple Rd', 'Calgary', 'AB', 'T2P 1J1', 'Home');
+INSERT INTO CUSTOMER_ADDRESS VALUES (4004, 3005, '101 Birch Dr', 'Ottawa', 'ON', 'K1P 5J2', 'Home');
+INSERT INTO CUSTOMER_ADDRESS VALUES (4005, 3006, '202 Cedar Ln', 'Montreal', 'QC', 'H3B 1X1', 'Work');
+INSERT INTO CUSTOMER_ADDRESS VALUES (4006, 3007, '303 Elm St', 'Halifax', 'NS', 'B3J 1M1', 'Home');
+INSERT INTO CUSTOMER_ADDRESS VALUES (4007, 3008, '404 Willow Ct', 'Winnipeg', 'MB', 'R3C 1S1', 'Home');
+INSERT INTO CUSTOMER_ADDRESS VALUES (4008, 3009, '505 Poplar Pl', 'Victoria', 'BC', 'V8W 1R1', 'Work');
+INSERT INTO CUSTOMER_ADDRESS VALUES (4009, 3010, '606 Ash Blvd', 'Edmonton', 'AB', 'T5J 1N1', 'Home');
+INSERT INTO CUSTOMER_ADDRESS VALUES (4010, 3001, '123 Pine St', 'Toronto', 'ON', 'M5V 2L1', 'Office');
+
+-- 8. CART 
+INSERT INTO CART VALUES (5001, 3001, 'Active', SYSDATE);
+INSERT INTO CART VALUES (5002, 3002, 'Checked Out', SYSDATE-5);
+INSERT INTO CART VALUES (5003, 3003, 'Active', SYSDATE);
+INSERT INTO CART VALUES (5004, 3005, 'Active', SYSDATE-2);
+INSERT INTO CART VALUES (5005, 3006, 'Abandoned', SYSDATE-10);
+INSERT INTO CART VALUES (5006, 3007, 'Active', SYSDATE);
+INSERT INTO CART VALUES (5007, 3008, 'Checked Out', SYSDATE-1);
+INSERT INTO CART VALUES (5008, 3009, 'Active', SYSDATE);
+INSERT INTO CART VALUES (5009, 3010, 'Active', SYSDATE);
+INSERT INTO CART VALUES (5010, 3001, 'Abandoned', SYSDATE-20);
+
+-- 9. CART_ITEM 
+INSERT INTO CART_ITEM VALUES (6001, 5001, 1001, 1, 399.00);
+INSERT INTO CART_ITEM VALUES (6002, 5002, 1003, 1, 899.00);
+INSERT INTO CART_ITEM VALUES (6003, 5003, 1006, 2, 598.00);
+INSERT INTO CART_ITEM VALUES (6004, 5004, 1010, 1, 159.00);
+INSERT INTO CART_ITEM VALUES (6005, 5001, 1004, 1, 295.00);
+INSERT INTO CART_ITEM VALUES (6006, 5006, 1001, 1, 399.00);
+INSERT INTO CART_ITEM VALUES (6007, 5007, 1008, 1, 350.00);
+INSERT INTO CART_ITEM VALUES (6008, 5008, 1006, 1, 299.00);
+INSERT INTO CART_ITEM VALUES (6009, 5009, 1005, 1, 229.00);
+INSERT INTO CART_ITEM VALUES (6010, 5003, 1001, 1, 399.00);
+
+-- 10. WISHLIST 
+INSERT INTO WISHLIST VALUES (7001, 3001, 'My Birthday List');
+INSERT INTO WISHLIST VALUES (7002, 3002, 'Tech Wishlist');
+INSERT INTO WISHLIST VALUES (7003, 3003, 'Luxury Dream');
+INSERT INTO WISHLIST VALUES (7004, 3005, 'Fitness Goals');
+INSERT INTO WISHLIST VALUES (7005, 3006, 'Work Anniversary');
+INSERT INTO WISHLIST VALUES (7006, 3007, 'Favorites');
+INSERT INTO WISHLIST VALUES (7007, 3008, 'Holiday Gifts');
+INSERT INTO WISHLIST VALUES (7008, 3009, 'New Collection');
+INSERT INTO WISHLIST VALUES (7009, 3010, 'Savings Target');
+INSERT INTO WISHLIST VALUES (7010, 3001, 'Secondary List');
+
+-- 11. WISHLIST_ITEM 
+INSERT INTO WISHLIST_ITEM VALUES (8001, 7001, 1002, SYSDATE);
+INSERT INTO WISHLIST_ITEM VALUES (8002, 7002, 1001, SYSDATE);
+INSERT INTO WISHLIST_ITEM VALUES (8003, 7003, 1007, SYSDATE);
+INSERT INTO WISHLIST_ITEM VALUES (8004, 7004, 1003, SYSDATE);
+INSERT INTO WISHLIST_ITEM VALUES (8005, 7005, 1009, SYSDATE);
+INSERT INTO WISHLIST_ITEM VALUES (8006, 7006, 1001, SYSDATE);
+INSERT INTO WISHLIST_ITEM VALUES (8007, 7007, 1008, SYSDATE);
+INSERT INTO WISHLIST_ITEM VALUES (8008, 7008, 1006, SYSDATE);
+INSERT INTO WISHLIST_ITEM VALUES (8009, 7009, 1002, SYSDATE);
+INSERT INTO WISHLIST_ITEM VALUES (8010, 7010, 1004, SYSDATE);
+
+-- 12. ORDERS 
+INSERT INTO ORDERS VALUES (9001, 3001, SYSDATE-30, 399.00, 'Delivered');
+INSERT INTO ORDERS VALUES (9002, 3002, SYSDATE-25, 899.00, 'Delivered');
+INSERT INTO ORDERS VALUES (9003, 3003, SYSDATE-20, 1196.00, 'Delivered');
+INSERT INTO ORDERS VALUES (9004, 3005, SYSDATE-15, 159.00, 'Delivered');
+INSERT INTO ORDERS VALUES (9005, 3006, SYSDATE-10, 6500.00, 'Shipped');
+INSERT INTO ORDERS VALUES (9006, 3007, SYSDATE-5, 399.00, 'Shipped');
+INSERT INTO ORDERS VALUES (9007, 3008, SYSDATE-2, 350.00, 'Pending');
+INSERT INTO ORDERS VALUES (9008, 3009, SYSDATE-1, 299.00, 'Pending');
+INSERT INTO ORDERS VALUES (9009, 3010, SYSDATE, 229.00, 'Pending');
+INSERT INTO ORDERS VALUES (9010, 3001, SYSDATE-1, 10500.00, 'Pending');
+
+-- 13. ORDER_ITEM
+INSERT INTO ORDER_ITEM VALUES (10001, 9001, 1001, 1, 399.00);
+INSERT INTO ORDER_ITEM VALUES (10002, 9002, 1003, 1, 899.00);
+INSERT INTO ORDER_ITEM VALUES (10003, 9003, 1006, 4, 1196.00);
+INSERT INTO ORDER_ITEM VALUES (10004, 9004, 1010, 1, 159.00);
+INSERT INTO ORDER_ITEM VALUES (10005, 9005, 1007, 1, 6500.00);
+INSERT INTO ORDER_ITEM VALUES (10006, 9006, 1001, 1, 399.00);
+INSERT INTO ORDER_ITEM VALUES (10007, 9007, 1008, 1, 350.00);
+INSERT INTO ORDER_ITEM VALUES (10008, 9008, 1006, 1, 299.00);
+INSERT INTO ORDER_ITEM VALUES (10009, 9009, 1005, 1, 229.00);
+INSERT INTO ORDER_ITEM VALUES (10010, 9010, 1002, 1, 10500.00);
+
+-- 14. SHIPPING 
+INSERT INTO SHIPPING VALUES (11001, 9001, 4001, 'Delivered', SYSDATE-28, 'TRK001');
+INSERT INTO SHIPPING VALUES (11002, 9002, 4002, 'Delivered', SYSDATE-23, 'TRK002');
+INSERT INTO SHIPPING VALUES (11003, 9003, 4003, 'Delivered', SYSDATE-18, 'TRK003');
+INSERT INTO SHIPPING VALUES (11004, 9004, 4004, 'Delivered', SYSDATE-13, 'TRK004');
+INSERT INTO SHIPPING VALUES (11005, 9005, 4005, 'In Transit', SYSDATE-8, 'TRK005');
+INSERT INTO SHIPPING VALUES (11006, 9006, 4006, 'In Transit', SYSDATE-3, 'TRK006');
+INSERT INTO SHIPPING VALUES (11007, 9007, 4007, 'Pending', NULL, 'TRK007');
+INSERT INTO SHIPPING VALUES (11008, 9008, 4008, 'Pending', NULL, 'TRK008');
+INSERT INTO SHIPPING VALUES (11009, 9009, 4009, 'Pending', NULL, 'TRK009');
+INSERT INTO SHIPPING VALUES (11010, 9010, 4001, 'Pending', NULL, 'TRK010');
+
+-- 15. ORDER_ACTION 
+INSERT INTO ORDER_ACTION VALUES (12001, 9001, 'None', SYSDATE-25);
+INSERT INTO ORDER_ACTION VALUES (12002, 9002, 'Return', SYSDATE-20);
+INSERT INTO ORDER_ACTION VALUES (12003, 9003, 'Exchange', SYSDATE-18);
+INSERT INTO ORDER_ACTION VALUES (12004, 9004, 'None', SYSDATE-10);
+INSERT INTO ORDER_ACTION VALUES (12005, 9005, 'None', SYSDATE-5);
+INSERT INTO ORDER_ACTION VALUES (12006, 9006, 'Cancellation', SYSDATE-2);
+INSERT INTO ORDER_ACTION VALUES (12007, 9007, 'None', SYSDATE);
+INSERT INTO ORDER_ACTION VALUES (12008, 9008, 'None', SYSDATE);
+INSERT INTO ORDER_ACTION VALUES (12009, 9009, 'None', SYSDATE);
+INSERT INTO ORDER_ACTION VALUES (12010, 9010, 'Return', SYSDATE);
+
+COMMIT;
+
+--*********************
+SELECT p.product_name, p.product_price, c.category_name 
+FROM PRODUCT p
+JOIN SUBCATEGORY s ON p.sub_id = s.sub_id
+JOIN CATEGORY c ON s.category_id = c.category_id
+WHERE c.category_name = 'Luxury Watches';
+
+SELECT ci.cart_item_id, p.product_name, ci.quantity, ci.item_price
+FROM CART_ITEM ci
+JOIN PRODUCT p ON ci.product_id = p.product_id
+JOIN CART c ON ci.cart_id = c.cart_id
+WHERE c.customer_id = 3001 AND c.cart_status = 'Active';
+
+UPDATE CUSTOMER SET customer_status = 'Inactive' WHERE customer_id = 3003;
+
+SELECT o.order_id, s.shipping_status, s.tracking_number, s.shipping_date
+FROM SHIPPING s
+JOIN ORDERS o ON s.order_id = o.order_id
+WHERE o.customer_id = 3001;
+
+SELECT v.vendor_name, p.product_name, p.product_stock
+FROM PRODUCT p
+JOIN VENDOR v ON p.vendor_id = v.vendor_id
+WHERE v.vendor_name = 'Apple Inc.';
+
+--**********************
+SELECT TO_CHAR(order_date, 'YYYY-MM') AS "Month", SUM(total_amount) AS "Total Sales"
+FROM ORDERS
+GROUP BY TO_CHAR(order_date, 'YYYY-MM');
+
+SELECT p.product_name, SUM(oi.quantity) AS "Units Sold"
+FROM ORDER_ITEM oi
+JOIN PRODUCT p ON oi.product_id = p.product_id
+GROUP BY p.product_name
+ORDER BY "Units Sold" DESC;
+
+--*************************
+SELECT customer_id, SUM(total_amount) AS "Lifetime Spend",
+CASE 
+    WHEN SUM(total_amount) > 1000 THEN 'High Value'
+    ELSE 'Standard'
+END AS "Customer Category"
+FROM ORDERS
+GROUP BY customer_id;
+
+SELECT w.wishlist_name, p.product_name, p.product_price
+FROM WISHLIST_ITEM wi
+JOIN PRODUCT p ON wi.product_id = p.product_id
+JOIN WISHLIST w ON wi.wishlist_id = w.wishlist_id
+WHERE w.customer_id = 3001;
+
+--*****************************
+SELECT o.order_id, o.customer_id, oa.action_type, oa.action_date
+FROM ORDER_ACTION oa
+JOIN ORDERS o ON oa.order_id = o.order_id
+WHERE oa.action_type = 'Return';
